@@ -93,8 +93,9 @@ public:
     
     void pop_back(T const& value);
 
-    T& operator[] (int index) const;
-
+    const T& operator[] (int index) const;
+    T& operator[] (int index);
+  
     std::size_t max_size() const;
         
     std::size_t size() const;
@@ -120,7 +121,7 @@ private:
 
 
 template<typename T>
-T& vector<T>::operator[] (const int index) const
+const T& vector<T>::operator[] (int index) const
 {
     if(index >= _size)
     {
@@ -128,6 +129,17 @@ T& vector<T>::operator[] (const int index) const
     }
     return buffer[index];
 }
+
+template<typename T>
+T& vector<T>::operator[] (int index) 
+{
+    if(index >= _size)
+    {
+        throw std::out_of_range(OUT_OF_RANGE);
+    }
+    return buffer[index];
+}
+
 
 template<typename T>
 std::size_t vector<T>::max_size() const
