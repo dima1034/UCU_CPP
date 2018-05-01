@@ -18,7 +18,7 @@ public:
     vector(std::initializer_list<T> lst)
             : _size(lst.size())
             , _capacity(lst.size())
-            , buffer(new T[_size]) 
+            , buffer(new T[lst.size()]) 
     {
         std::copy(lst.begin(), lst.end(), buffer);
     }
@@ -26,12 +26,12 @@ public:
     // Move Constructor
     vector(vector&& other) noexcept
             : _size(other.size())
-            , _capacity(other.size())
+            , _capacity(other.capacity())
             , buffer(other.buffer) 
     { // && ссылка на rvalue
-        other._size = DEFAULT_VECTOR_SIZE;
-        other._capacity = DEFAULT_VECTOR_CAPACITY;
-        other.buffer = nullptr;
+        other._size     = 0;
+        other._capacity = 0;
+        other.buffer    = nullptr;
     }
     
     // Copy Constructor
@@ -54,7 +54,7 @@ public:
     vector()
             : _size(DEFAULT_VECTOR_SIZE)
             , _capacity(DEFAULT_VECTOR_CAPACITY)
-            , buffer(new T[_size])
+            , buffer(new T[DEFAULT_VECTOR_CAPACITY])
     {}
 
     // Move Assignment Operator
@@ -107,16 +107,18 @@ public:
         delete[] buffer;            // Clean up the resource
     }
 
-private:
-    T *buffer = nullptr;
-    std::size_t _size     = 0;     // The number of objects in the vector
-    std::size_t _capacity = 0;
+private:    
 
     constexpr static int DEFAULT_VECTOR_SIZE     = 0;
-    constexpr static int DEFAULT_VECTOR_CAPACITY = 0;
+    constexpr static int DEFAULT_VECTOR_CAPACITY = 1;
     constexpr static char OUT_OF_RANGE[]         = "index out of range"; //why not string????
 
+    T *buffer = nullptr;
+    std::size_t _size     = DEFAULT_VECTOR_SIZE;     // The number of objects in the vector
+    std::size_t _capacity = DEFAULT_VECTOR_CAPACITY;
+
     void swap(vector& other) noexcept;
+    void allocate();
 };
 
 
@@ -140,6 +142,17 @@ T& vector<T>::operator[] (int index)
     return buffer[index];
 }
 
+template<typename T>
+void vector<T>::allocate()
+{
+    _capacity *= 2;
+    
+    T* temp = new T[_capacity];
+    std::copy(buffer, buffer + size(), temp);
+    delete[] buffer;
+
+    buffer = temp;
+}
 
 template<typename T>
 std::size_t vector<T>::max_size() const
@@ -164,7 +177,11 @@ std::size_t vector<T>::capacity() const
 template<typename T>
 void vector<T>::push_back(T const& value)
 {
-    new (buffer + _size) T(value);
+    if (_size >= _capacity) {
+        allocate();
+    }
+    //buffer = new (buffer + _size) T(value);
+    buffer[_size] = value;
     ++_size;
 }
 
